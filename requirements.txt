@@ -1,0 +1,10 @@
+# Dépendances ajoutées uniquement après validation explicite.
+# Core numerical and tabular processing
+numpy==2.5.3
+pandas==3.0.6
+
+# Local visualisation
+matplotlib==3.11.2
+
+# Tests
+pytest==9.1.1

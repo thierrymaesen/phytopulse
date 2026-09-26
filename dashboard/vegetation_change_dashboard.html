@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PhytoPulse — Dashboard</title>
+  <style>
+    :root { --bg:#f4f7f2; --card:#fff; --text:#17221b; --muted:#617066; --border:#d8e1d9; --green:#27734a; --orange:#b86b00; --red:#b52f2f; --yellow:#a77a00; --info-bg:#fff8df; --info-border:#d49a20; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:Arial,Helvetica,sans-serif; }
+    main { max-width:1100px; margin:0 auto; padding:28px 18px 48px; }
+    h1 { margin:0 0 6px; font-size:32px; }
+    h2 { margin:0 0 18px; font-size:20px; }
+    .subtitle { color:var(--muted); margin:0 0 22px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:22px; margin:16px 0; box-shadow:0 4px 14px rgba(30,50,35,.05); }
+    .alert { border-radius:10px; padding:14px 16px; margin:12px 0; }
+    .alert.error { background:#fff0ee; border:1px solid #e5aaa2; color:#8f2828; }
+    .alert.info { background:var(--info-bg); border-left:4px solid var(--info-border); color:#765817; }
+    .hidden { display:none; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; }
+    .metric { border:1px solid var(--border); border-radius:10px; padding:15px; background:#fbfdfb; }
+    .metric-label { color:var(--muted); font-size:13px; margin-bottom:7px; }
+    .metric-value { font-size:21px; font-weight:700; overflow-wrap:anywhere; }
+    .status { font-weight:700; }
+    .status.anomalie_forte { color:var(--red); }
+    .status.anomalie_moderee, .status.baisse_moderee_a_examiner { color:var(--orange); }
+    .status.anomalie_legere { color:var(--yellow); }
+    .status.pas_anomalie { color:var(--green); }
+    .explain-text { line-height:1.65; white-space:pre-wrap; color:#38453c; }
+    .period { margin-top:16px; color:var(--muted); }
+    .limits-card { background:#fffdf5; border-left:5px solid var(--info-border); }
+    .limits-card p { margin:0; color:#4f4938; line-height:1.65; }
+    .limits-card strong { color:#4a3b13; }
+    .location-card { background:#f8fcf8; border-left:5px solid var(--green); }
+    .location-card p { color:#38453c; line-height:1.65; }
+    .map-link { display:inline-block; margin-top:6px; color:#17613a; font-weight:700; text-decoration:none; }
+    .map-link:hover { text-decoration:underline; }
+    code { background:#eef2ed; padding:2px 5px; border-radius:4px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>PhytoPulse</h1>
+    <p class="subtitle">Signal explicable de changement de végétation à partir du NDVI et du contexte météo.</p>
+    <div id="load-error" class="alert error hidden"></div>
+    <div class="alert info">Les rapports sont chargés depuis le dossier <code>data/</code> à la racine du projet.</div>
+
+    <section class="card location-card">
+      <h2>Zone à vérifier sur le terrain</h2>
+      <div class="grid">
+        <div class="metric"><div class="metric-label">Parcelle analysée</div><div id="field-label" class="metric-value">Parcelle de démonstration — Vielsalm</div></div>
+        <div class="metric"><div class="metric-label">Latitude</div><div id="field-latitude" class="metric-value">50.2833</div></div>
+        <div class="metric"><div class="metric-label">Longitude</div><div id="field-longitude" class="metric-value">5.9000</div></div>
+      </div>
+      <p><strong>Consigne terrain :</strong> les résultats concernent la parcelle centrée autour de ces coordonnées. Le système signale un changement à l'échelle de la parcelle ; il ne localise pas encore une sous-zone précise. Vérifiez l'ensemble de la parcelle, en priorisant les secteurs présentant visuellement des signes de stress.</p>
+      <a id="map-link" class="map-link" href="https://www.openstreetmap.org/?mlat=50.2833&mlon=5.9000#map=16/50.2833/5.9000" target="_blank" rel="noopener noreferrer">Ouvrir le centre de la parcelle dans OpenStreetMap ↗</a>
+    </section>
+
+    <section class="card">
+      <h2>Changement NDVI</h2>
+      <div class="grid">
+        <div class="metric"><div class="metric-label">Statut</div><div id="veg-status" class="metric-value">Chargement...</div></div>
+        <div class="metric"><div class="metric-label">Confiance</div><div id="veg-confidence" class="metric-value">—</div></div>
+        <div class="metric"><div class="metric-label">NDVI initial</div><div id="ndvi-start" class="metric-value">—</div></div>
+        <div class="metric"><div class="metric-label">NDVI final</div><div id="ndvi-end" class="metric-value">—</div></div>
+        <div class="metric"><div class="metric-label">Variation</div><div id="ndvi-change" class="metric-value">—</div></div>
+        <div class="metric"><div class="metric-label">Score</div><div id="veg-score" class="metric-value">—</div></div>
+      </div>
+      <div id="veg-period" class="period">Intervalle analysé : —</div>
+    </section>
+
+    <section class="card">
+      <h2>Contexte météo</h2>
+      <div class="grid">
+        <div class="metric"><div class="metric-label">Statut</div><div id="weather-status" class="metric-value">Chargement...</div></div>
+        <div class="metric"><div class="metric-label">Précipitations</div><div id="precipitation" class="metric-value">—</div></div>
+        <div class="metric"><div class="metric-label">Jours secs</div><div id="dry-days" class="metric-value">—</div></div>
+        <div class="metric"><div class="metric-label">Température moyenne</div><div id="temperature" class="metric-value">—</div></div>
+        <div class="metric"><div class="metric-label">ET0</div><div id="et0" class="metric-value">—</div></div>
+        <div class="metric"><div class="metric-label">Bilan proxy</div><div id="water-balance" class="metric-value">—</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Anomalie détectée</h2>
+      <div class="grid">
+        <div class="metric"><div class="metric-label">Statut</div><div id="anomaly-status" class="metric-value">Chargement...</div></div>
+        <div class="metric"><div class="metric-label">Confiance</div><div id="anomaly-confidence" class="metric-value">—</div></div>
+        <div class="metric"><div class="metric-label">Écart NDVI</div><div id="anomaly-ndvi" class="metric-value">—</div></div>
+        <div class="metric"><div class="metric-label">Déficit hydrique</div><div id="anomaly-dry-days" class="metric-value">—</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Explication IA</h2>
+      <div id="explain-text" class="explain-text">Chargement de l'explication...</div>
+    </section>
+
+    <section class="card limits-card">
+      <h2>Limites et interprétation</h2>
+      <p><strong>PhytoPulse détecte et explique des signaux de changement de végétation.</strong> Il ne fournit pas de diagnostic agronomique, ne détermine pas à lui seul la cause d'un stress et ne prouve pas une relation de causalité entre la météo et le NDVI. Les résultats reposent sur des données satellitaires et météorologiques régionales ; ils doivent être confirmés par une observation terrain.</p>
+    </section>
+  </main>
+
+  <script>
+    const REPORTS = {
+      field: '../field_config.json',
+      vegetation: '../data/vegetation_change_report.json',
+      weather: '../data/weather_context_report.json',
+      anomaly: '../data/anomaly_report.json',
+      explanation: '../data/explain_report.json'
+    };
+
+    const $ = id => document.getElementById(id);
+    const STATUS_LABELS = {
+      baisse_moderee_a_examiner: 'Baisse modérée à examiner',
+      periode_chaude_et_majoritairement_seche: 'Période chaude et majoritairement sèche',
+      anomalie_forte: 'Anomalie forte',
+      anomalie_moderee: 'Anomalie modérée',
+      anomalie_legere: 'Anomalie légère',
+      pas_anomalie: 'Pas d’anomalie'
+    };
+
+    function humanizeStatus(value) {
+      if (!value) return '—';
+      return STATUS_LABELS[value] || String(value).replaceAll('_', ' ');
+    }
+
+    function showError(message) {
+      const box = $('load-error');
+      box.classList.remove('hidden');
+      box.innerHTML = '<strong>Rapport indisponible.</strong><br>' + message;
+    }
+
+    async function loadJson(url) {
+      const response = await fetch(url, { cache:'no-store' });
+      if (!response.ok) throw new Error(`${url} : HTTP ${response.status}`);
+      return response.json();
+    }
+
+    function formatNumber(value, digits=2) {
+      return value === null || value === undefined || Number.isNaN(Number(value)) ? '—' : Number(value).toFixed(digits);
+    }
+
+    function setStatus(element, rawValue) {
+      element.textContent = humanizeStatus(rawValue);
+      element.className = 'metric-value status ' + (rawValue || '');
+    }
+
+    async function init() {
+      try {
+        const field = await loadJson(REPORTS.field);
+        const latitude = Number(field.latitude);
+        const longitude = Number(field.longitude);
+        $('field-label').textContent = field.label || 'Parcelle analysée';
+        $('field-latitude').textContent = Number.isFinite(latitude) ? latitude.toFixed(4) : '—';
+        $('field-longitude').textContent = Number.isFinite(longitude) ? longitude.toFixed(4) : '—';
+        if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+          $('map-link').href = `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=16/${latitude}/${longitude}`;
+        }
+      } catch (error) {
+        console.error('Impossible de charger field_config.json:', error);
+      }
+
+      try {
+        const data = await loadJson(REPORTS.vegetation);
+        setStatus($('veg-status'), data.status);
+        $('veg-confidence').textContent = data.confidence || '—';
+        $('ndvi-start').textContent = formatNumber(data.ndvi?.from, 4);
+        $('ndvi-end').textContent = formatNumber(data.ndvi?.to, 4);
+        const delta = data.ndvi?.delta;
+        $('ndvi-change').textContent = delta === undefined ? '—' : `${Number(delta) >= 0 ? '+' : ''}${formatNumber(delta,4)}`;
+        $('veg-score').textContent = data.change_score_0_100 === undefined ? '—' : `${formatNumber(data.change_score_0_100,1)}/100`;
+        if (data.period) {
+          $('veg-period').textContent = `Intervalle analysé : ${data.period.from || '—'} → ${data.period.to || '—'} (${data.period.days ?? '—'} jours écoulés)`;
+        }
+      } catch (error) {
+        showError(`Impossible de charger le rapport NDVI : ${error.message}`);
+        $('veg-status').textContent = 'Indisponible';
+      }
+
+      try {
+        const data = await loadJson(REPORTS.weather);
+        const m = data.metrics || {};
+        $('weather-status').textContent = humanizeStatus(data.status);
+        $('precipitation').textContent = `${formatNumber(m.precipitation_sum_mm ?? m.precipitation_total_mm)} mm`;
+        $('dry-days').textContent = m.dry_days_count ?? '—';
+        $('temperature').textContent = `${formatNumber(m.temperature_mean_c ?? m.mean_temperature_c)} °C`;
+        $('et0').textContent = `${formatNumber(m.et0_sum_mm ?? m.et0_total_mm)} mm`;
+        $('water-balance').textContent = `${formatNumber(m.water_balance_proxy_mm ?? m.water_balance_mm)} mm`;
+      } catch (error) {
+        $('weather-status').textContent = 'Indisponible';
+        console.error(error);
+      }
+
+      try {
+        const data = await loadJson(REPORTS.anomaly);
+        const m = data.metrics || {};
+        setStatus($('anomaly-status'), data.status);
+        $('anomaly-confidence').textContent = data.confidence || '—';
+        $('anomaly-ndvi').textContent = m.ndvi_anomaly_mean === undefined ? '—' : `${(Number(m.ndvi_anomaly_mean) * 100).toFixed(1)}%`;
+        $('anomaly-dry-days').textContent = m.water_deficit_days === undefined ? '—' : `${m.water_deficit_days} jour(s)`;
+      } catch (error) {
+        $('anomaly-status').textContent = 'Indisponible';
+        console.error(error);
+      }
+
+      try {
+        const data = await loadJson(REPORTS.explanation);
+        $('explain-text').textContent = data.explanation_text || (data.explanation_paragraphs || []).join('\n\n') || 'Aucune explication disponible.';
+      } catch (error) {
+        $('explain-text').textContent = 'Explication indisponible.';
+        console.error(error);
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

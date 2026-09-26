@@ -1,0 +1,10 @@
+{
+  "field_id": "vielsalm_demo_01",
+  "label": "Parcelle de démonstration — Vielsalm",
+  "location_status": "approximate",
+  "latitude": 50.2833,
+  "longitude": 5.9,
+  "notes": "Point provisoire utilisé pour le contexte météo ; la géométrie exacte de la parcelle reste à confirmer.",
+  "data_scope": "Démonstration locale : les coordonnées servent à tracer la provenance et le contexte météo. Elles ne confirment pas la géométrie de la parcelle utilisée pour la série NDVI.",
+  "version": "1.0"
+}

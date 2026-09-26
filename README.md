@@ -1,4 +1,4 @@
-﻿---
+﻿# Fix encoding test\n\n---
 title: Phytopulse
 emoji: ðŸŒ¿
 colorFrom: green
@@ -325,4 +325,5 @@ Educational and portfolio demonstration project.
 ## ðŸ“œ License
 
 This project is distributed under the MIT License. See `LICENSE` if present.
+
 

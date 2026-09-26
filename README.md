@@ -26,8 +26,7 @@ license: mit
 [![Dashboard](https://img.shields.io/badge/dashboard-HTML%2FJavaScript-orange.svg)](dashboard/vegetation_change_dashboard.html)
 [![Explainable AI](https://img.shields.io/badge/AI-explainable-7b1fa2.svg)](#-explicabilit%C3%A9-et-limites)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![CI status](https://github.com/thierrymaesen/phytopulse/actions/workflows/ci.yml/badge.svg)](https://github.com/thierrymaesen/phytopulse/actions/workflows/ci.yml)
-
+[![CI status](https://github.com/thierrymaesen/phytopulse/actions/workflows/ci.yml/badge.svg?cache=2)](https://github.com/thierrymaesen/phytopulse/actions/workflows/ci.yml)
 ## 📖 Présentation
 
 PhytoPulse est un démonstrateur de télédétection appliquée à l'agriculture. Le projet combine l'évolution du NDVI, un contexte météorologique régional et des règles explicables afin de produire un signal de changement de végétation compréhensible et exploitable pour une première vérification terrain.

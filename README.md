@@ -26,6 +26,7 @@ license: mit
 [![Dashboard](https://img.shields.io/badge/dashboard-HTML%2FJavaScript-orange.svg)](dashboard/vegetation_change_dashboard.html)
 [![Explainable AI](https://img.shields.io/badge/AI-explainable-7b1fa2.svg)](#-explicabilit%C3%A9-et-limites)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+![CI status](https://github.com/thierrymaesen/phytopulse/actions/workflows/ci.yml/badge.svg)
 
 ## 📖 Présentation
 
